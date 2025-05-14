@@ -4,6 +4,6 @@ function loader(source) {
 }
 loader.pitch = function () {
   console.log("pitch-inline2");
-  return "pitch-inline2";
+  // return "pitch-inline2";
 };
 module.exports = loader;

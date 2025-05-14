@@ -8,7 +8,7 @@ const fs = require("fs");
 // 获取入口文件的绝对路径
 const entryFilePath = path.resolve(__dirname, "../src/entry1.js");
 // 定义需要处理的请求字符串
-const request = `inline1-loader!inline2-loader!${entryFilePath}`;
+const request = `-!inline1-loader!inline2-loader!${entryFilePath}`;
 
 // 定义 loader 规则
 const rules = [
@@ -40,7 +40,7 @@ const rules = [
 ];
 
 // 将请求的字符串按照感叹号分割成数组
-const parts = request.split('!');
+const parts = request.replace(/^-?!+/, '').split('!');
 // 弹出数组最后一个元素，即资源路径
 const resource = parts.pop();
 // 将剩下的数组元素作为内联 loader 列表
@@ -66,7 +66,14 @@ for (rule of rules) {
 }
 
 // 将 preLoaders、normalLoaders、postLoaders 和 inlineLoaders 数组合并成一个总的 loaders 数组
-const loaders = [...postLoaders, ...inlineLoaders, ...normalLoaders, ...preLoaders];
+let loaders = [...postLoaders, ...inlineLoaders, ...normalLoaders, ...preLoaders];
+if (request.startsWith('!!')) {
+  loaders = [...inlineLoaders];
+} else if (request.startsWith('-!')) {
+  loaders = [ ...postLoaders ,...inlineLoaders];
+} else if (request.startsWith('!')) {
+  loaders = [...postLoaders, ...inlineLoaders, ...preLoaders];
+}
 // 定义一个函数，用于将 loader 转换成绝对路径
 function resolveLoader(loader) {
   return path.resolve(__dirname, '../loaders-chain', (loader.loader || loader) + '.js');
