@@ -1,3 +1,4 @@
 const name = require('./name');
+const age = require('./age');
 
-module.exports = 'title'+name;
+module.exports = age +'title'+name;

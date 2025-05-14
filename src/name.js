@@ -1,1 +1,2 @@
-module.exports = 'name';
+const age = require('./age');
+module.exports = 'name' + age;

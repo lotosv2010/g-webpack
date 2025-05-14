@@ -25,6 +25,7 @@ class Compiler {
     this.hooks.run.call();
     // 定义onCompiled回调函数，用于处理编译结果
     const onCompiled = (err, stats, fileDependencies) => {
+      //! 10.在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写入到文件系统
       // 获取编译生成的资源
       const { assets } = stats;
       // 遍历资源，将资源写入输出目录

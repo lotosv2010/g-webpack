@@ -34,6 +34,7 @@ class Complication {
     this.assets = {};
   }
   build(onCompiled) {
+    //! 5.根据配置中的entry找出入口文件
     // 定义一个空对象，用于存储入口信息
     let entry = {};
     // 判断options.entry的类型
@@ -53,8 +54,10 @@ class Complication {
       );
       // 添加入口文件路径到文件依赖集合
       this.fileDependencies.add(entryFilePath);
+      //! 6.从入口文件出发,调用所有配置的Loader对模块进行编译
       // 调用buildModule方法构建入口模块
       let entryModule = this.buildModule(entryName, entryFilePath);
+      //! 8.根据入口和模块之间的依赖关系，组装成一个个包含多个模块的 Chunk
       // 创建一个chunk对象，包含名称、入口模块和与该入口关联的模块
       let chunk = {
         name: entryName,
@@ -66,6 +69,7 @@ class Complication {
       // 将chunk对象添加到chunks数组
       this.chunks.push(chunk);
     }
+    //! 9.再把每个 Chunk 转换成一个单独的文件加入到输出列表
     // 遍历chunks数组，为每个chunk生成输出文件
     this.chunks.forEach((chunk) => {
       // 替换输出文件名模板中的[name]为chunk名称
@@ -108,6 +112,7 @@ class Complication {
       },
       rawSourceCode
     );
+    //! 7.再找出该模块依赖的模块，再递归本步骤直到所有入口依赖的文件都经过了本步骤的处理
     // 生成模块ID（相对路径）
     let moduleId = "./" + path.posix.relative(this.options.context, modulePath);
     // 创建模块对象
@@ -126,15 +131,22 @@ class Complication {
     traverse(ast, {
       CallExpression: ({ node }) => {
         if (node.callee.name === "require") {
+          // .代表当前的模块所有的目录，不是工作目录
           let depModuleName = node.arguments[0].value;
+          // 获取当前的模块所在的目录
           let dirName = path.posix.dirname(modulePath);
           let depModulePath = path.posix.join(dirName, depModuleName);
           let { extensions } = this.options.resolve;
+          // 尝试添加扩展名找到真正的模块路径
           depModulePath = tryExtensions(depModulePath, extensions);
+          // 把依赖的模块路径添加到文件依赖列表
           this.fileDependencies.add(depModulePath);
+          // 获取此模块的ID，也就是相对于根目录的相对路径
           let depModuleId =
             "./" + path.posix.relative(this.options.context, depModulePath);
+          // 修改语法树，把引入模块路径改为模块的ID
           node.arguments[0] = types.stringLiteral(depModuleId);
+          // 给当前模块添加依赖信息
           module.dependencies.push({
             depModuleId,
             depModulePath,
@@ -147,15 +159,21 @@ class Complication {
     // 将生成的源代码添加到模块对象中
     module._source = code;
     // 处理模块依赖
+    this.processModule(module, entryName);
+    return module;
+  }
+  processModule(module, entryName) {
     module.dependencies.forEach(({ depModuleId, depModulePath }) => {
+      // 判断模块是否已经编译过了
       let existModule = this.modules.find((item) => item.id === depModuleId);
       if (existModule) {
         existModule.names.push(entryName);
+        // 递归设置依赖模块的names
+        this.processModule(existModule, entryName);
       } else {
         this.buildModule(entryName, depModulePath);
       }
     });
-    return module;
   }
 }
 // 定义tryExtensions函数，用于尝试不同的文件扩展名，找到对应的模块文件
