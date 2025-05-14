@@ -78,7 +78,9 @@ const resolvedLoaders = loaders.map(resolveLoader);
 runLoaders({
   resource, // 资源路径
   loaders: resolvedLoaders, // 需要执行的 loader 列表
-  context: {}, // loader 执行的上下文对象
+  context: {
+    age: 20
+  }, // loader 执行的上下文对象
   readResource: fs.readFile.bind(fs) // 用于读取资源的函数
 }, (err, result) => {
   // 打印错误和处理结果
