@@ -1,5 +1,6 @@
 // 引入 loader-runner 模块中的 runLoaders 函数
-const { runLoaders } = require("loader-runner");
+// const { runLoaders } = require("loader-runner");
+const { runLoaders } = require("../loader-runner");
 // 引入 path 模块
 const path = require("path");
 // 引入 fs 模块
@@ -8,7 +9,7 @@ const fs = require("fs");
 // 获取入口文件的绝对路径
 const entryFilePath = path.resolve(__dirname, "../src/entry1.js");
 // 定义需要处理的请求字符串
-const request = `-!inline1-loader!inline2-loader!${entryFilePath}`;
+const request = `inline1-loader!inline2-loader!${entryFilePath}`;
 
 // 定义 loader 规则
 const rules = [
@@ -70,13 +71,16 @@ let loaders = [...postLoaders, ...inlineLoaders, ...normalLoaders, ...preLoaders
 if (request.startsWith('!!')) {
   loaders = [...inlineLoaders];
 } else if (request.startsWith('-!')) {
-  loaders = [ ...postLoaders ,...inlineLoaders];
+  loaders = [...postLoaders, ...inlineLoaders];
 } else if (request.startsWith('!')) {
   loaders = [...postLoaders, ...inlineLoaders, ...preLoaders];
 }
 // 定义一个函数，用于将 loader 转换成绝对路径
 function resolveLoader(loader) {
-  return path.resolve(__dirname, '../loaders-chain', (loader.loader || loader) + '.js');
+  return { 
+    loader: path.resolve(__dirname, '../loaders-chain', (loader.loader || loader) + '.js'),
+    options: loader.options || {}
+  };
 }
 
 // 将 loaders 数组中的 loader 转换成绝对路径
@@ -86,7 +90,14 @@ runLoaders({
   resource, // 资源路径
   loaders: resolvedLoaders, // 需要执行的 loader 列表
   context: {
-    age: 20
+    age: 20,
+    getCurrentLoader() {
+      return this.loaders[this.loaderIndex];
+    },
+    getOptions() {
+      const loader = this.getCurrentLoader();
+      return loader.options || loader.query;
+    }
   }, // loader 执行的上下文对象
   readResource: fs.readFile.bind(fs) // 用于读取资源的函数
 }, (err, result) => {

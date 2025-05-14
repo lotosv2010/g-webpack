@@ -1,5 +1,6 @@
 function loader(source) {
   console.log("pre2");
+  console.log("pre2 getOptions", this.getOptions());
   return source + "//pre2";
 }
 loader.pitch = function () {
