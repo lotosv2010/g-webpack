@@ -1,3 +1,5 @@
 const title = require('./title');
 
-console.log('entry1 ' ,title);
+const add = (a, b) => a + b;
+
+console.log('entry1 ' ,title, add(1, 2));

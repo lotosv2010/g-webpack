@@ -1,34 +1,43 @@
 const path = require("path");
-const RunPlugin = require("./plugins/run-plugin");
-const DonePlugin = require("./plugins/done-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "development",
-  devtool: false,
-  entry: {
-    entry1: "./src/entry1.js",
-    entry2: "./src/entry2.js",
-  },
+  devtool: "source-map",
+  entry: "./src/entry1.js",
   output: {
     path: path.resolve("dist"),
     filename: "[name].js",
+    clean: true,
+  },
+  devServer: {
+    port: 3030,
+    open: true,
+    hot: false,
   },
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
+  },
+  resolveLoader: {
+    alias: {
+      "babel-loader": path.resolve(__dirname, "loaders/babel-loader.js"),
+    },
+    modules: [path.resolve("./loaders"), "node_modules"],
   },
   module: {
     rules: [
       {
         test: /\.js$/,
-        use: [
-          path.resolve(__dirname, "loaders/logger1-loader.js"),
-          path.resolve(__dirname, "loaders/logger2-loader.js"),
-        ],
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+        },
       },
     ],
   },
   plugins: [
-    new RunPlugin(), 
-    new DonePlugin(), 
+    new HtmlWebpackPlugin({
+      template: "./public/index.html",
+    }),
   ],
 };

@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "webpack serve",
     "build": "webpack",
     "test": "node test/debugger.js",
     "loader": "node test/run-loader.js"
@@ -12,13 +13,18 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.27.1",
     "@babel/generator": "^7.27.1",
     "@babel/parser": "^7.27.2",
+    "@babel/preset-env": "^7.27.2",
     "@babel/traverse": "^7.27.1",
+    "babel-loader": "^10.0.0",
     "babel-types": "^6.26.0",
+    "html-webpack-plugin": "^5.6.3",
     "loader-runner": "^4.3.0",
     "tapable": "^2.2.1",
     "webpack": "^5.99.8",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
   }
 }
