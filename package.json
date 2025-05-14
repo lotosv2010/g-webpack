@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "test": "node test/debugger.js"
+    "test": "node test/debugger.js",
+    "loader": "node test/run-loader.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "@babel/parser": "^7.27.2",
     "@babel/traverse": "^7.27.1",
     "babel-types": "^6.26.0",
+    "loader-runner": "^4.3.0",
     "tapable": "^2.2.1",
     "webpack": "^5.99.8",
     "webpack-cli": "^6.0.1"
