@@ -12,7 +12,7 @@ module.exports = {
   },
   devServer: {
     port: 3030,
-    open: true,
+    open: false,
     hot: false,
   },
   resolve: {
@@ -37,7 +37,11 @@ module.exports = {
         test: /\.css$/,
         use: [
           {
-            loader: "css-loader",
+            loader: 'style-loader'
+          },
+          {
+            // loader: 'css-loader',
+            loader: path.resolve('loaders/css-loader'),
             options: {
               modules: false,
             },
