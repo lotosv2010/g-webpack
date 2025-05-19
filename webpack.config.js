@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "development",
-  devtool: "source-map",
+  // devtool: "source-map",
   entry: "./src/index.js",
   output: {
     path: path.resolve("dist"),
@@ -45,7 +45,9 @@ module.exports = {
             loader: path.resolve('loaders/css-loader'),
             options: {
               esModule: false,
-              url: true
+              url: true,
+              import: true,
+              importLoaders: 0, // 在处理css文件之前，要执行的loader的数量
             },
           },
         ],

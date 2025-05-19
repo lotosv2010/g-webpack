@@ -28,12 +28,16 @@ function stringifyRequest(loaderContext, request) {
 /**
  * 定义一个函数，用于生成模块代码
  * @param {object} result - 样式文件的内容
+ * @param {object} api - postcss-import 插件的 api
  * @param {object} replacements  - 替换规则
  * @returns {string} 模块代码
  */
-function getModuleCode(result, replacements) {
+function getModuleCode(result, api, replacements) {
   let code = JSON.stringify(result.css);
   let beforeCode = `var cssLoaderExport = cssLoaderApiImport(cssLoaderApiNoSourcemapImport);\n`;
+  for (const item of api) {
+    beforeCode += `cssLoaderExport.i(${item.importName});\n`;
+  }
   for (const { replacementName, importName } of replacements) {
     beforeCode += `var ${replacementName} = cssLoaderGetUrlImport(${importName});\n`;
     code = code.replace(new RegExp(replacementName, 'g'), () => `"+ ${replacementName} +"`);
@@ -52,8 +56,32 @@ function getExportCode(options) {
   return code;
 }
 
+/**
+ *  合并请求
+ * @param {string} preRequest 请求前缀
+ * @param {string} url 请求地址
+ * @returns {string} 合并后的url
+ */
+function combineRequests(preRequest, url) {
+  return preRequest ? `${preRequest}${url}` : url;
+}
+
+/**
+ * 获取要执行的loader
+ * @param {string} loaders 所有的loader
+ * @param {number} loaderIndex 当前loader的索引
+ * @param {number} importLoaders 用户配置要执行的loader的数量
+ * @returns {string} 要执行的loader
+ */
+function getPreRequester({ loaders, loaderIndex }, { importLoaders = 0 }) {
+  const loadersRequest = loaders.slice(loaderIndex, loaderIndex + 1 + importLoaders).map(x => x.request).join("!");
+  return "-!" + loadersRequest + "!";
+}
+
 // 导出相关函数
 exports.getImportCode = getImportCode;
 exports.stringifyRequest = stringifyRequest;
 exports.getModuleCode = getModuleCode;
 exports.getExportCode = getExportCode;
+exports.getPreRequester = getPreRequester;
+exports.combineRequests = combineRequests;
