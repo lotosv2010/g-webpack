@@ -3,8 +3,8 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "development",
-  devtool: "source-map",
-  entry: "./src/entry1.js",
+  // devtool: "source-map",
+  entry: "./src/index.js",
   output: {
     path: path.resolve("dist"),
     filename: "[name].js",
@@ -26,13 +26,25 @@ module.exports = {
   },
   module: {
     rules: [
+      // {
+      //   test: /\.js$/,
+      //   exclude: /node_modules/,
+      //   use: {
+      //     loader: "babel-loader",
+      //   },
+      // },
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
-        },
-      },
+        test: /\.css$/,
+        use: [
+          {
+            loader: "css-loader",
+            options: {
+              modules: false,
+            },
+          },
+        ],
+        include: path.resolve(__dirname, "src"),
+      }
     ],
   },
   plugins: [
