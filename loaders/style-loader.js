@@ -23,7 +23,7 @@ loaderAPI.pitch = function (remindingRequest) {
     // 创建一个 style 元素
     const element = document.createElement("style");
     // 将样式内容设置为 style 元素的 innerHTML
-    element.innerHTML = content.toString();
+    element.innerHTML = (content.default || content).toString();
     // 将 style 元素添加到文档的 head 部分
     document.head.appendChild(element);
   `;

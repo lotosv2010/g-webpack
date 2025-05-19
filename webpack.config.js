@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "development",
-  // devtool: "source-map",
+  devtool: "source-map",
   entry: "./src/index.js",
   output: {
     path: path.resolve("dist"),
@@ -38,16 +38,22 @@ module.exports = {
         use: [
           {
             loader: path.resolve('loaders/style-loader')
+            // loader: 'style-loader',
           },
           {
             // loader: 'css-loader',
             loader: path.resolve('loaders/css-loader'),
             options: {
-              modules: false,
+              esModule: false,
+              url: true
             },
           },
         ],
         include: path.resolve(__dirname, "src"),
+      },
+      {
+        test: /\.(png|jpg|gif)$/,
+        type: 'asset/resource',
       }
     ],
   },

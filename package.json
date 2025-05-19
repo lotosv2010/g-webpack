@@ -23,6 +23,8 @@
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.3",
     "loader-runner": "^4.3.0",
+    "postcss": "^8.5.3",
+    "postcss-value-parser": "^4.2.0",
     "style-loader": "^4.0.0",
     "tapable": "^2.2.1",
     "webpack": "^5.99.8",
