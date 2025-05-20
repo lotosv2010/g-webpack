@@ -26,6 +26,7 @@ loaderAPI.pitch = function (remindingRequest) {
     element.innerHTML = (content.default || content).toString();
     // 将 style 元素添加到文档的 head 部分
     document.head.appendChild(element);
+    module.exports = content;
   `;
   // 返回生成的代码字符串
   return contentCode;

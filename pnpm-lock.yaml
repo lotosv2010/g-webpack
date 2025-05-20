@@ -35,12 +35,18 @@ importers:
       html-webpack-plugin:
         specifier: ^5.6.3
         version: 5.6.3(webpack@5.99.8)
+      icss-utils:
+        specifier: ^5.1.0
+        version: 5.1.0(postcss@8.5.3)
       loader-runner:
         specifier: ^4.3.0
         version: 4.3.0
       postcss:
         specifier: ^8.5.3
         version: 8.5.3
+      postcss-selector-parser:
+        specifier: ^7.1.0
+        version: 7.1.0
       postcss-value-parser:
         specifier: ^4.2.0
         version: 4.2.0

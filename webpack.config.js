@@ -48,6 +48,10 @@ module.exports = {
               url: true,
               import: true,
               importLoaders: 0, // 在处理css文件之前，要执行的loader的数量
+              modules: {
+                mode: 'local',
+                exportOnlyLocals: false, // exportOnlyLocals 为 true 时，只编译 css 文件，不输出 css 文件，需要配合 mini-css-extract-plugin 使用
+              }
             },
           },
         ],
