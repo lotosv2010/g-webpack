@@ -7,7 +7,8 @@
     "dev": "webpack serve",
     "build": "webpack",
     "test": "node test/debugger.js",
-    "loader": "node test/run-loader.js"
+    "loader": "node test/run-loader.js",
+    "tapable": "node test/tapable"
   },
   "keywords": [],
   "author": "",
