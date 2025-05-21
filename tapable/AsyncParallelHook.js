@@ -13,11 +13,12 @@ const HookCodeFactory = require('./HookCodeFactory');
 class AsyncParallelHookCodeFactory extends HookCodeFactory {
   /**
    * 生成并行执行所有 tap 的代码
+   * @param {Object} param 参数对象
    * @returns {string} 返回生成的代码字符串
    */
-  content() {
+  content({ onDone }) {
     // 调用父类的 callTapsParallel 方法，生成并行调用的代码
-    return this.callTapsParallel();
+    return this.callTapsParallel({ onDone });
   }
 }
 

@@ -76,8 +76,19 @@ class HookCodeFactory {
         // 生成异步钩子的执行函数
         fn = new Function(
           this.args({ after: '_callback' }),
-          this.header() + this.content()
+          this.header() + this.content({ onDone: () => " _callback();\n" })
         )
+        break;
+      case 'promise':
+        // 生成 promise 钩子的执行函数
+        let tapsContent = this.content({ onDone: () => " _resolve();\n" });
+        let content = `return new Promise(function (_resolve, _reject) {
+          ${tapsContent}
+        })`;
+        fn = new Function(
+          this.args(),
+          this.header() + content
+        );
         break;
       default:
         break;
@@ -106,11 +117,11 @@ class HookCodeFactory {
    * 并行调用所有 tap，生成并行执行的代码
    * @returns {string}
    */
-  callTapsParallel() {
+  callTapsParallel({ onDone }) {
     let code = `var _counter = ${this.options.taps.length};\n`;
     code += `
       var _done = function () {
-        _callback();
+        ${onDone()}
       };
     `;
     for (let j = 0; j < this.options.taps.length; j++) {
@@ -132,13 +143,32 @@ class HookCodeFactory {
     switch (tap.type) {
       case 'sync':
         // 生成同步调用代码
-        code += `_fn${tapIndex}(${this.args()});\n`;
+        code += `
+          _fn${tapIndex}(${this.args()});
+        `;
+        if(this.options.type ===  'async') {
+          code += `
+            if (--_counter === 0) _done();
+          `;
+        }
         break;
       case 'async':
         code += `
-          _fn${tapIndex}(${this.args({after:`function (_err${tapIndex}) {
+          _fn${tapIndex}(${this.args({
+          after: `function (_err${tapIndex}) {
             if (--_counter === 0) _done();
           }`})});
+        `;
+        break;
+      case 'promise':
+        code = `
+          var _fn${tapIndex} = _x[${tapIndex}];
+          var _promise${tapIndex} = _fn${tapIndex}(${this.args()});
+          _promise${tapIndex}.then(
+            function () {
+              if (--_counter === 0) _done();
+            }
+          );
         `;
         break;
       default:

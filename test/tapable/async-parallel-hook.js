@@ -2,19 +2,20 @@
 const { AsyncParallelHook } = require("../../tapable");
 
 //! 1.同步注册
-const queue = new AsyncParallelHook(["name"]);
+const queue = new AsyncParallelHook(["name", "age"]);
 
 console.time("cost");
-queue.tap("1", function (name) {
-  console.log(1);
+queue.tap("1", function (name, age) {
+  console.log(1, name, age);
 });
-queue.tap("2", function (name) {
-  console.log(2);
+queue.tap("2", function (name, age) {
+  console.log(2, name, age);
 });
-queue.tap("3", function (name) {
-  console.log(3);
+queue.tap("3", function (name, age) {
+  console.log(3, name, age);
 });
-queue.callAsync("AsyncParallelHook", (err) => {
+debugger
+queue.callAsync("AsyncParallelHook", 18, (err) => {
   console.log(err);
   console.timeEnd("cost");
 });
@@ -48,33 +49,34 @@ AsyncQueue.callAsync('AsyncParallelHook', 10, (err) => {
 });
 
 //! 3.promise注册
-// let promiseQueue = new AsyncParallelHook(["name"]);
+const promiseQueue = new AsyncParallelHook(["name", "age"]);
 
-// console.time("promise cost");
-// promiseQueue.tapPromise("1", function (name) {
-//   return new Promise(function (resolve, reject) {
-//     setTimeout(function () {
-//       console.log(1);
-//       resolve();
-//     }, 1000);
-//   });
-// });
-// promiseQueue.tapPromise("2", function (name) {
-//   return new Promise(function (resolve, reject) {
-//     setTimeout(function () {
-//       console.log(2);
-//       resolve();
-//     }, 2000);
-//   });
-// });
-// promiseQueue.tapPromise("3", function (name) {
-//   return new Promise(function (resolve, reject) {
-//     setTimeout(function () {
-//       console.log(3);
-//       resolve();
-//     }, 3000);
-//   });
-// });
-// promiseQueue.promise("AsyncParallelHook").then(() => {
-//   console.timeEnd("promise cost");
-// });
+console.time("promise cost");
+promiseQueue.tapPromise("1", function (name, age) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      console.log(1, name, age);
+      resolve();
+    }, 1000);
+  });
+});
+promiseQueue.tapPromise("2", function (name, age) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      console.log(2, name, age);
+      resolve();
+    }, 2000);
+  });
+});
+promiseQueue.tapPromise("3", function (name, age) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      console.log(3, name, age);
+      resolve();
+    }, 3000);
+  });
+});
+debugger
+promiseQueue.promise("AsyncParallelHook", 28).then(() => {
+  console.timeEnd("promise cost");
+});
