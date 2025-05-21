@@ -28,6 +28,11 @@ class Hook {
      * @type {Function}
      */
     this.call = CALL_DELEGATE;
+    /**
+     * callAsync 方法，初始为代理函数
+     * @type {Function}
+     */
+    this.callAsync = CALL_ASYNC_DELEGATE;
   }
 
   /**
@@ -37,6 +42,15 @@ class Hook {
    */
   tap(options, fn) {
     this._tap("sync", options, fn);
+  }
+
+  /**
+   * 注册异步钩子
+   * @param {string|Object} options tap 名称或配置对象
+   * @param {Function} fn 回调函数
+   */
+  tapAsync(options, fn) {
+    this._tap("async", options, fn);
   }
 
   /**
@@ -98,6 +112,16 @@ class Hook {
 const CALL_DELEGATE = function (...args) {
   this.call = this._createCall("sync");
   return this.call(...args);
+};
+
+/**
+ * callAsync 的初始代理函数，首次调用时会编译生成真正的 callAsync 方法
+ * @param  {...any} args
+ * @returns {any}
+ */
+const CALL_ASYNC_DELEGATE = function (...args) {
+  this.callAsync = this._createCall("async");
+  return this.callAsync(...args);
 };
 
 module.exports = Hook;

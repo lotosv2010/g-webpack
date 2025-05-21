@@ -72,6 +72,13 @@ class HookCodeFactory {
           this.header() + this.content()
         )
         break;
+      case 'async':
+        // 生成异步钩子的执行函数
+        fn = new Function(
+          this.args({ after: '_callback' }),
+          this.header() + this.content()
+        )
+        break;
       default:
         break;
     }
@@ -96,6 +103,24 @@ class HookCodeFactory {
   }
 
   /**
+   * 并行调用所有 tap，生成并行执行的代码
+   * @returns {string}
+   */
+  callTapsParallel() {
+    let code = `var _counter = ${this.options.taps.length};\n`;
+    code += `
+      var _done = function () {
+        _callback();
+      };
+    `;
+    for (let j = 0; j < this.options.taps.length; j++) {
+      const content = this.callTap(j);
+      code += content;
+    }
+    return code;
+  }
+
+  /**
    * 生成调用单个 tap 的代码
    * @param {number} tapIndex
    * @returns {string}
@@ -108,6 +133,13 @@ class HookCodeFactory {
       case 'sync':
         // 生成同步调用代码
         code += `_fn${tapIndex}(${this.args()});\n`;
+        break;
+      case 'async':
+        code += `
+          _fn${tapIndex}(${this.args({after:`function (_err${tapIndex}) {
+            if (--_counter === 0) _done();
+          }`})});
+        `;
         break;
       default:
         break;

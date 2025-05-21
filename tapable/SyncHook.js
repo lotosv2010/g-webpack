@@ -3,7 +3,7 @@
  * @description 定义同步钩子 SyncHook 及其工厂，支持注册和串行执行 tap 回调。
  */
 
-let Hook = require('./Hook');
+const Hook = require('./Hook');
 const HookCodeFactory = require('./HookCodeFactory');
 
 /**

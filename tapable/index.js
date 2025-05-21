@@ -4,7 +4,9 @@
  */
 
 const SyncHook = require('./SyncHook');
+const AsyncParallelHook = require('./AsyncParallelHook');
 
 module.exports = {
-  SyncHook,
+  SyncHook, // 同步钩子
+  AsyncParallelHook // 异步并行钩子
 }
