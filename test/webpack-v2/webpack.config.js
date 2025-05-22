@@ -2,6 +2,7 @@ const path = require("path");
 
 module.exports = {
   mode: 'development',
+  context: process.cwd(),
   devtool: false,
   entry: path.resolve(__dirname, 'src/index.js'),
   output: {

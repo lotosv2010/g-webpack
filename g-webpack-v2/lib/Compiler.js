@@ -24,6 +24,8 @@ class Compiler {
       beforeCompile: new AsyncSeriesHook(["params"]),
       compile: new SyncHook(["params"]),
       thisCompilation: new SyncHook(["compilation", "params"]),
+      finishMake:  new AsyncSeriesHook(["compilation"]),
+      afterCompile: new AsyncSeriesHook(["compilation"]), 
     };
   }
   run(callback) {
@@ -40,7 +42,7 @@ class Compiler {
       // 在运行编译器时出发的钩子
       this.hooks.run.callAsync(this, err => {
         if (err) return finalCallback(err);
-        //! 12.开始编译：调用Compiler的run方法开始执行编译过程。此时，Compiler会进入到构建流程的各个阶段，包括构建模块、分析依赖、优化等
+        //! 1.12.开始编译：调用Compiler的run方法开始执行编译过程。此时，Compiler会进入到构建流程的各个阶段，包括构建模块、分析依赖、优化等
         this.compile(onCompiled);
       })
     });

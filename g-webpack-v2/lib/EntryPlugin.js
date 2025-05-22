@@ -17,13 +17,14 @@ class EntryPlugin {
       // 注册入口依赖和模块工厂的关联
       compilation.dependencyFactories.set(EntryDependency, normalModuleFactory); // EntryDependency: 入口依赖 要通过 EntryDependency 创建模块工厂对象，来生产对应的入口模块
     });
-    //! 9.解析入口文件：根据配置对象的entry属性解析入口文件。Webpack会为每个入口文件创建一个Chunk，并确定各个模块之间的依赖关系。
+    //! 1.9.解析入口文件：根据配置对象的entry属性解析入口文件。Webpack会为每个入口文件创建一个Chunk，并确定各个模块之间的依赖关系。
     const { entry, options, context } = this;
     //  调用静态方法通过entry得到一个依赖实例
     const dep = EntryPlugin.createDependency(entry, options);
     // 注册make钩子，在make钩子中调用addEntry方法
     compiler.hooks.make.tapAsync("EntryPlugin", (compilation, callback) => {
       // TODO 此处时真正进入第二个流程，编译流程
+      //! 2.1.addEntry方法用于向编译过程中添加入口点
       compilation.addEntry(context, dep, options, callback);
     });
   }

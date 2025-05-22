@@ -19,6 +19,7 @@ compiler.run((err, stats) => {
     chunks: true,
     assets: true
   }));
+  console.log(statsString);
   // 将统计数据字符串写入文件myStats.json，用于分析构建过程
   // __dirname 代表当前文件所在目录
   fs.writeFileSync(path.resolve(__dirname, 'dist', 'myStats.json'), statsString);
