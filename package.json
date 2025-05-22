@@ -7,6 +7,7 @@
     "dev": "webpack serve",
     "build": "webpack",
     "test": "node test/debugger.js",
+    "debug": "node test/webpack-v2/debugger.js",
     "loader": "node test/run-loader.js",
     "tapable": "node test/tapable"
   },

@@ -1,0 +1,1 @@
+export default "Hello g-webpack";
