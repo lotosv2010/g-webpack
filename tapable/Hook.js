@@ -123,7 +123,25 @@ class Hook {
    */
   _insert(tapInfo) {
     this._resetCompilation();
-    this.taps.push(tapInfo);
+    let stage = 0;
+    if (typeof tapInfo.stage === "number") {
+      stage = tapInfo.stage;
+    }
+    let i = this.taps.length;
+
+    // 从后往前遍历，找到第一个 stage 小于当前 tap 的 stage 的位置，插入当前 tap
+    while (i > 0) {
+      i--;
+      const x = this.taps[i];
+      this.taps[i + 1] = x;
+      const xStage = x.stage || 0;
+      if (xStage > stage) {
+        continue;
+      }
+      i++;
+      break;
+    }
+    this.taps[i] = tapInfo;
   }
 
   /**
