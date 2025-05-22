@@ -53,6 +53,18 @@ class HookCodeFactory {
   header() {
     let code = "";
     code += "var _x = this._x;\n";
+    const { interceptors } = this.options;
+    if(interceptors.length  > 0) {
+      code += `var _taps = this.taps;\n`;
+      code += `var _interceptors = this.interceptors;\n`;
+    }
+    for  (let i = 0; i < interceptors.length; i++) {
+      const interceptor = interceptors[i];
+      code += `var _interceptor${i} = _interceptors[${i}];\n`;
+      if(interceptor.call) {
+        code += `_interceptor${i}.call(${this.args()});\n`;
+      }
+    }
     return code;
   }
 
@@ -149,7 +161,17 @@ class HookCodeFactory {
    */
   callTap(tapIndex, { onDone } = {}) {
     let code = "";
-    code += `var _fn${tapIndex} = _x[${tapIndex}];\n`
+    const { interceptors } = this.options;
+    if(interceptors.length > 0) {
+      code += `var _tap${tapIndex} = _taps[${tapIndex}];\n`;
+      for (let i = 0; i < interceptors.length; i++) {
+        const interceptor = interceptors[i];
+        if(interceptor.tap) {
+          code += `_interceptor${i}.tap(_tap${tapIndex});\n`;
+        }
+      }
+    }
+    code += `var _fn${tapIndex} = _x[${tapIndex}];\n`;
     let tap = this.options.taps[tapIndex];
     switch (tap.type) {
       case 'sync':

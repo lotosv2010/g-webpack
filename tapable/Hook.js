@@ -38,6 +38,11 @@ class Hook {
      * @type {Function}
      */
     this.promise = PROMISE_DELEGATE;
+    /**
+     * 拦截器列表
+     * @type {Array<Object>}
+     */
+    this.interceptors = [];
   }
 
   /**
@@ -77,7 +82,32 @@ class Hook {
     if (typeof options === 'string')
       options = { name: options };
     let tapInfo = { ...options, type, fn };
+    tapInfo = this._runRegisterInterceptors(tapInfo);
     this._insert(tapInfo);
+  }
+  /**
+   * 运行 tap 注册拦截器
+   * @param {Object} tapInfo tap 信息
+   * @returns {Object} tap 信息
+   */
+  _runRegisterInterceptors(tapInfo) {
+    for (const interceptor of this.interceptors) {
+      if (interceptor.register) {
+        const newTapInfo = interceptor.register(tapInfo);
+        if (newTapInfo !== undefined) {
+          tapInfo = newTapInfo;
+        }
+      }
+    }
+    return tapInfo;
+  }
+
+  /**
+   * 拦截 tap 注册
+   * @param {Object} interceptor 拦截器对象
+   */
+  intercept(interceptor) {
+    this.interceptors.push(interceptor);
   }
 
   /**
@@ -113,7 +143,8 @@ class Hook {
     return this.compile({
       taps: this.taps,
       args: this.args,
-      type
+      type,
+      interceptors: this.interceptors
     });
   }
 }
