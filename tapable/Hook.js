@@ -123,6 +123,16 @@ class Hook {
    */
   _insert(tapInfo) {
     this._resetCompilation();
+
+    // before
+    let before;
+    if (typeof tapInfo.before === "string") {
+      before = new Set([tapInfo.before]);
+    } else if (Array.isArray(tapInfo.before)) {
+      before = new Set(tapInfo.before);
+    }
+
+    // stage
     let stage = 0;
     if (typeof tapInfo.stage === "number") {
       stage = tapInfo.stage;
@@ -135,6 +145,18 @@ class Hook {
       const x = this.taps[i];
       this.taps[i + 1] = x;
       const xStage = x.stage || 0;
+
+      // 找到第一个 stage 小于当前 tap 的 stage 的位置
+      if (before) {
+        if (before.has(x.name)) {
+          before.delete(x.name);
+          continue;
+        }
+        if (before.size > 0) {
+          continue;
+        }
+      }
+
       if (xStage > stage) {
         continue;
       }
