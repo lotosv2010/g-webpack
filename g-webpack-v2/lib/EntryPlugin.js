@@ -1,37 +1,45 @@
-const  EntryDependency = require("./dependencies/EntryDependency");
 
-/**
- * EntryPlugin 插件
- */
-class EntryPlugin {
-  constructor(context, entry, options) {
-    this.context = context; // 根目录
-    this.entry = entry; // 入口
-    this.options = options || {}; // 配置项
-
-  }
-  apply(compiler) {
-    // 注册compilation钩子, 当我们开始编译时，会触发compilation钩子，此时可以获取compilation对象
-    // normalModuleFactory: 模块工厂对象
-    compiler.hooks.compilation.tap("EntryPlugin", (compilation, { normalModuleFactory }) => {
-      // 注册入口依赖和模块工厂的关联
-      compilation.dependencyFactories.set(EntryDependency, normalModuleFactory); // EntryDependency: 入口依赖 要通过 EntryDependency 创建模块工厂对象，来生产对应的入口模块
-    });
-    //! 1.9.解析入口文件：根据配置对象的entry属性解析入口文件。Webpack会为每个入口文件创建一个Chunk，并确定各个模块之间的依赖关系。
-    const { entry, options, context } = this;
-    //  调用静态方法通过entry得到一个依赖实例
-    const dep = EntryPlugin.createDependency(entry, options);
-    // 注册make钩子，在make钩子中调用addEntry方法
-    compiler.hooks.make.tapAsync("EntryPlugin", (compilation, callback) => {
-      // TODO 此处时真正进入第二个流程，编译流程
-      //! 2.1.addEntry方法用于向编译过程中添加入口点
-      compilation.addEntry(context, dep, options, callback);
-    });
-  }
-
-  static createDependency(entry, options) {
-    return new EntryDependency(entry);
-  }
+const EntryDependency = require("./dependencies/EntryDependency");
+class EntryPlugin{
+    constructor(context, entry, options) {
+		this.context = context;//根目录
+		this.entry = entry;//入口文件路径
+		this.options = options || {};//选项
+	}
+    apply(compiler){
+        //监听compilation钩子
+        //当我们开始一次新的编译，就会创建一个新的compilation,触发compilation钩子
+        //参数对象里有一个属性normalModuleFactory，代表生产模块工厂
+        compiler.hooks.compilation.tap(
+			"EntryPlugin",
+			(compilation, { normalModuleFactory }) => {
+                //this.hooks.compilation.call(compilation, params);
+                //注册入口依赖和对应的工厂关系
+                //moduleA import moduleB,moduleB会成为moduleA的依赖
+                //当编译完moduleA的时候，找到moduleA的依赖moduleBDependency
+                //然后要到这个dependencyFactories找对应的工作，把依赖传进去，生成对应的moduleB模块
+                //webpack里有多种依赖，有多种模块工厂，每个依赖会对应一个生产模块的工厂
+				compilation.dependencyFactories.set(
+                    //入口依赖要通过normalModuleFactory来生产对应的入口模块
+					EntryDependency,
+					normalModuleFactory
+				);
+                const { entry, options, context } = this;
+                //调用静态方法通过entry得到一个依赖实例
+                const dep = EntryPlugin.createDependency(entry, options);
+                //注册make钩子回调，等待make事件的触发
+                //this.hooks.make.callAsync(compilation)
+                compiler.hooks.make.tapAsync("EntryPlugin", (compilation, callback) => {
+                    compilation.addEntry(context, dep, options, err => {
+                        callback(err);
+                    });
+                });
+			}
+		);
+    }
+    static createDependency(entry) {
+        //webpack5依赖是115种
+		return new EntryDependency(entry);
+	}
 }
-
 module.exports = EntryPlugin;

@@ -1,6 +1,7 @@
 /**
- * 所有依赖的父类
+ * 所有的依赖的父类
  */
-class Dependency {}
+class Dependency {
 
+}
 module.exports = Dependency;

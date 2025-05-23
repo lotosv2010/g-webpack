@@ -1,116 +1,139 @@
-const { SyncHook, SyncBailHook, AsyncParallelHook, AsyncSeriesHook } = require('tapable');
-const NormalModuleFactory = require('./NormalModuleFactory');
+const { SyncHook, SyncBailHook, AsyncParallelHook, AsyncSeriesHook } = require("tapable");
+const NormalModuleFactory = require("./NormalModuleFactory");
 const Compilation = require('./Compilation');
-
-/**
- * 编译器类
- */
+const ResolverFactory = require("./ResolverFactory");
+const { mkdirp, join } = require("./util/fs");
 class Compiler {
-  constructor(context, options) {
-    this.context = context; // 项目根目录
-    this.options = options; // 配置项
-    this.hooks = { // 钩子
-      environment: new SyncHook(),
-      afterEnvironment: new SyncHook(),
-      initialize: new SyncHook(), 
-      entryOption: new SyncBailHook(["context", "entry"]),
-      compilation: new SyncHook(["compilation", "params"]),
-      make: new AsyncParallelHook(["compilation"]),
-      afterPlugins: new SyncHook(["compiler"]),
-      afterResolvers: new SyncHook(["compiler"]),
-      beforeRun: new AsyncSeriesHook(["compiler"]),
-      run: new AsyncSeriesHook(["compiler"]),
-      normalModuleFactory: new SyncHook(["normalModuleFactory"]),
-      beforeCompile: new AsyncSeriesHook(["params"]),
-      compile: new SyncHook(["params"]),
-      thisCompilation: new SyncHook(["compilation", "params"]),
-      finishMake:  new AsyncSeriesHook(["compilation"]),
-      afterCompile: new AsyncSeriesHook(["compilation"]), 
-    };
-  }
-  run(callback) {
-    const finalCallback = (err, stats) => {
-      // 构建完成，调用回调函数
-      callback(err, stats);
-    };
-    const onCompiled = (err, stats) => {
-      finalCallback(err, stats);
-    };
-    // 在运行编译器之前出发的钩子
-    this.hooks.beforeRun.callAsync(this, err => {
-      if (err) return finalCallback(err);
-      // 在运行编译器时出发的钩子
-      this.hooks.run.callAsync(this, err => {
-        if (err) return finalCallback(err);
-        //! 1.12.开始编译：调用Compiler的run方法开始执行编译过程。此时，Compiler会进入到构建流程的各个阶段，包括构建模块、分析依赖、优化等
-        this.compile(onCompiled);
-      })
-    });
-  }
-  compile(callback) {
-    debugger;
-    // 创建新的编译参数对象
-    const params = this.newCompilationParams();
-    // 在编译之前调用钩子，并传入编译参数对象
-    this.hooks.beforeCompile.callAsync(params, err => { 
-      // 开始编译
-      this.hooks.compile.call(params);
-      // 创建新的编译对象
-      const compilation = this.newCompilation(params);
-      // 在创建模块及代码块之前调用钩子，并传入编译对象
-      this.hooks.make.callAsync(compilation, err => {
-        this.hooks.finishMake.callAsync(compilation, err => {
-          process.nextTick(() => {
-            compilation.finish(err => {
-              compilation.seal(err => {
-                this.hooks.afterCompile.callAsync(compilation, err => {
-                  return callback(null, compilation);
-                });
-              })
-            })
-          })
-        });
-      });
-    });
-  }
-  /**
-   * 创建compilation对象
-   */
-  newCompilationParams() {
-    const params = {
-      normalModuleFactory: this.createNormalModuleFactory(),
-    }
-    return params;
-  }
-  /**
-   * 创建普通模块工厂
-   */
-  createNormalModuleFactory() {
-    // 创建一个普通模块工厂
-    const  normalModuleFactory = new NormalModuleFactory({
-      context: this.options.context
-    });
-    // 当创建好一个普通模块工厂的时候，会触发normalModuleFactory钩子
-    this.hooks.normalModuleFactory.call(normalModuleFactory);
-    return normalModuleFactory;
-  }
-  /**
-   * 创建编译对象
-   */
-  newCompilation(params) {
-    const compilation = this.createCompilation(params);
-    // 在当前编译之前，会触发thisCompilation钩子
-    this.hooks.thisCompilation.call(compilation, params);
-    // 在新的编译实例创建之后，会触发compilation钩子
-    this.hooks.compilation.call(compilation, params);
-    return compilation;
-  }
-  /**
-   * 创建 compilation 对象
-   */
-  createCompilation(params) {
-    return new Compilation(this, params);
-  }
+	constructor(context, options) {
+		this.context = context;
+		this.options = options;
+		this.resolverFactory = new ResolverFactory();
+		this.hooks = {
+			environment: new SyncHook(),
+			afterEnvironment: new SyncHook(),
+			initialize: new SyncHook(),
+			entryOption: new SyncBailHook(["context", "entry"]),
+			afterPlugins: new SyncHook(["compiler"]),
+			afterResolvers: new SyncHook(["compiler"]),
+			thisCompilation: new SyncHook(["compilation", "params"]),
+			compilation: new SyncHook(["compilation", "params"]),
+			normalModuleFactory: new SyncHook(["normalModuleFactory"]),
+			beforeRun: new AsyncSeriesHook(["compiler"]),
+			run: new AsyncSeriesHook(["compiler"]),
+			beforeCompile: new AsyncSeriesHook(["params"]),
+			compile: new SyncHook(["params"]),
+			make: new AsyncParallelHook(["compilation"]),
+			finishMake: new AsyncSeriesHook(["compilation"]),
+			afterCompile: new AsyncSeriesHook(["compilation"]),
+			emit: new AsyncSeriesHook(["compilation"])
+		}
+		this.outputPath = "";
+	}
+	run(callback) {
+		const finalCallback = (err, stats) => {
+			callback(err, stats)
+		}
+		const onCompiled = (err, compilation) => {
+			this.emitAssets(compilation, err => {
+				let stats = {
+					modules: compilation.modules,
+				}
+				finalCallback(err, stats)
+			})
+		}
+		//在运行编译器之前触发的钩子
+		this.hooks.beforeRun.callAsync(this, err => {
+			//在运行编译器时触发的钩子
+			this.hooks.run.callAsync(this, err => {
+				this.compile(onCompiled);
+			});
+		});
+	}
+	emitAssets(compilation, callback) {
+		const emitFiles = err => {
+			const assets = compilation.getAssets();
+			compilation.assets = { ...compilation.assets };
+			const allTargetPaths = new Set();
+			let inProgress = 0;
+			assets.forEach(asset => {
+				inProgress++;
+				let { name: file, source } = asset;
+				const getContent = () => {
+					if (typeof source.buffer === "function") {
+						return source.buffer();
+					} else {
+						const bufferOrString = source.source();
+						if (Buffer.isBuffer(bufferOrString)) {
+							return bufferOrString;
+						} else {
+							return Buffer.from(bufferOrString, "utf8");
+						}
+					}
+				};
+				let targetFile = file;
+				const targetPath = join(this.outputFileSystem, this.outputPath, targetFile);
+				allTargetPaths.add(targetPath);
+				const content = getContent();
+				this.outputFileSystem.writeFile(targetPath, content, err => {
+					if (--inProgress === 0) {
+						callback(err)
+					}
+				})
+			});
+		}
+		this.hooks.emit.callAsync(compilation, err => {
+			mkdirp(this.outputFileSystem, this.outputPath, emitFiles);
+		});
+	}
+	compile(callback) {
+		//先获取编译对象的参数params = {normalModuleFactory}
+		const params = this.newCompilationParams();
+		//在编译之前触发的钩子
+		this.hooks.beforeCompile.callAsync(params, err => {
+			//在编译开始时触发的钩子
+			this.hooks.compile.call(params);
+			const compilation = this.newCompilation(params);
+			//在创建模块及代码块之前触发的钩子
+			//这是一个非常重要的钩子，代表真正的开始构建
+			this.hooks.make.callAsync(compilation, err => {
+				this.hooks.finishMake.callAsync(compilation, err => {
+					compilation.finish(err => {
+						compilation.seal(err => {
+							this.hooks.afterCompile.callAsync(compilation, err => {
+								return callback(null, compilation);
+							});
+						});
+					});
+				});
+			});
+		});
+	}
+	newCompilation(params) {
+		const compilation = this.createCompilation(params);
+		//在当前编译之前触发的钩子
+		this.hooks.thisCompilation.call(compilation, params);
+		//在新编译实例创建后触发的钩子
+		this.hooks.compilation.call(compilation, params);
+		return compilation;
+	}
+	createCompilation(params) {
+		return new Compilation(this, params);
+	}
+	newCompilationParams() {
+		const params = {
+			normalModuleFactory: this.createNormalModuleFactory()
+		};
+		return params;
+	}
+	createNormalModuleFactory() {
+		//创建一个普通模块工厂
+		const normalModuleFactory = new NormalModuleFactory({
+			context: this.options.context,
+			resolverFactory: this.resolverFactory
+		});
+		///当你创建好了一个新的模块工厂实例的时候触发一个normalModuleFactory钩子
+		this.hooks.normalModuleFactory.call(normalModuleFactory);
+		return normalModuleFactory;
+	}
 }
-
 module.exports = Compiler;

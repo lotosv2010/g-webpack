@@ -10,17 +10,18 @@ const config = require('./webpack.config');
 // 使用配置文件创建一个webpack编译器实例
 const compiler = webpack(config);
 // 运行编译器，开始构建过程
+debugger
 compiler.run((err, stats) => {
   // 打印构建错误信息（如果有的话）
-  console.log(err);
+  if (err) return console.log(err.message);
+  console.log(stats);
   // 将构建统计数据转换为JSON字符串，包括模块、代码块和资源信息
-  let statsString = JSON.stringify(stats.toJson({
-    modules: true,
-    chunks: true,
-    assets: true
-  }));
-  console.log(statsString);
+  // let statsString = JSON.stringify(stats.toJson({
+  //   modules: true,
+  //   chunks: true,
+  //   assets: true
+  // }));
   // 将统计数据字符串写入文件myStats.json，用于分析构建过程
   // __dirname 代表当前文件所在目录
-  fs.writeFileSync(path.resolve(__dirname, 'dist', 'myStats.json'), statsString);
+  // fs.writeFileSync(path.resolve(__dirname, 'dist', 'myStats.json'), statsString);
 });
