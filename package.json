@@ -25,6 +25,7 @@
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.3",
     "icss-utils": "^5.1.0",
+    "jszip": "^3.10.1",
     "loader-runner": "^4.3.0",
     "postcss": "^8.5.3",
     "postcss-selector-parser": "^7.1.0",
@@ -33,6 +34,11 @@
     "tapable": "^2.2.1",
     "webpack": "^5.99.8",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.1"
+    "webpack-dev-server": "^5.2.1",
+    "webpack-sources": "^3.3.0"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1",
+    "lodash": "^4.17.21"
   }
 }

@@ -1,5 +1,9 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const RunPlugin = require("./plugins/run-plugin");
+const DonePlugin = require("./plugins/done-plugin");
+const ArchivePlugin = require("./plugins/archive-plugin");
+const AutoExternalPlugin = require("./plugins/auto-external-plugin");
 
 module.exports = {
   mode: "development",
@@ -24,6 +28,10 @@ module.exports = {
     },
     modules: [path.resolve("./loaders"), "node_modules"],
   },
+  // externals: {
+  //   lodash: "_",
+  //   jQuery: "$",
+  // },
   module: {
     rules: [
       // {
@@ -66,6 +74,19 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: "./public/index.html",
+    }),
+    new RunPlugin(),
+    new DonePlugin(),
+    new ArchivePlugin(),
+    new AutoExternalPlugin({
+      jquery:{//自动把jquery模块变成一个外部依赖模块
+        variable:'jQuery',//不再打包，而是从window.jQuery变量上获取jquery对象
+        url:'https://cdn.bootcss.com/jquery/3.1.0/jquery.js'//CDN脚本
+      },
+      lodash:{//自动把jquery模块变成一个外部依赖模块
+        variable:'_',//不再打包，而是从window.jQuery变量上获取jquery对象
+        url:'https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js'//CDN脚本
+      }
     }),
   ],
 };
